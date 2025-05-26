@@ -195,7 +195,7 @@ def plotkIVR(fname, Ekcal, kavg, kIVR, Ea, A, e_coeff):
     secax.set_xlabel(r'$E_{\text{pulse}}$ ($\mu\text{J}$)',labelpad=10)
     plt.xlim(left=0)
  
-    ax1.set_ylabel('$k_{IVR}/k_0$')
+    ax1.set_ylabel(r'$k_{IVR}/k_0(T_{\text{out}})$')
     ax1.set_xlabel(r'$E_{\text{abs}}$ ($\text{J}$)')
     secax.xaxis.set_major_formatter(ScalarFormatter(useMathText=True))
     secax.tick_params(axis='x', which='both', direction='in', length=7, width=3, labelsize=22)

@@ -7,7 +7,7 @@ from matplotlib import rc,cm
 from matplotlib import rcParams
 from scipy.constants import c,pi,h,N_A,R,Boltzmann
 
-flagp = 1
+flagp = 0
 flagw0 = 1
 
 tIVR = 10**(-12)           # in s
@@ -29,8 +29,8 @@ if flagp == 0:
 #      data4 = np.load('DataMain3Low.npz')
       fname1 = "fig2c.pdf"
       fname2 = "fig2b.pdf"
-      fname3 = "fig4.pdf"
-      fname4 = "fig3.pdf"
+      fname3 = "fig3.pdf"
+      fname4 = "fig4.pdf"
    elif flagw0 == 1:
       data1 = np.loadtxt('PulseHighT.txt')
       data3 = np.loadtxt('PulseHigh.txt')
