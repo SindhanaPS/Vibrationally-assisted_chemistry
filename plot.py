@@ -9,6 +9,7 @@ from scipy.constants import c,pi,h,N_A,R,Boltzmann
 
 flagp = 0
 flagw0 = 1
+flagVC = 0
 
 tIVR = 10**(-12)           # in s
 trep = 10**(-3)            # in s
@@ -22,11 +23,10 @@ e_coeff = 200              # in L mol^(-1) cm^(-1)
 
 hwCO,Ea,Ei = np.loadtxt("constants.txt")
 
-if flagp == 0:
+if flagp == 0 and flagVC == 0:
    if flagw0 == 0:
       data1 = np.loadtxt('PulseLowT.txt')
       data3 = np.loadtxt('PulseLow.txt')
-#      data4 = np.load('DataMain3Low.npz')
       fname1 = "fig2c.pdf"
       fname2 = "fig2b.pdf"
       fname3 = "fig3.pdf"
@@ -34,13 +34,12 @@ if flagp == 0:
    elif flagw0 == 1:
       data1 = np.loadtxt('PulseHighT.txt')
       data3 = np.loadtxt('PulseHigh.txt')
-#      data4 = np.load('DataMain3High.npz')
       fname1 = "figS1b.pdf"
       fname2 = "figS1a.pdf"
       fname3 = "figS2.pdf"
       fname4 = "figS3.pdf"
 
-elif flagp == 1:
+elif flagp == 1 and flagVC == 0:
    if flagw0 == 0:
       data1 = np.loadtxt('CWLowT.txt')
       data3 = np.loadtxt('CWLow.txt')
@@ -64,12 +63,6 @@ if flagp == 0:
    PrS = data3[:,4]
    kavg = data3[:,5]
    kIVR = data3[:,6]
-#   Ekcal = data4['Ekcal']
-#   t = data4['t']
-#   kt = data4['kt']
-#   dTti = data4['dTti']
-#   ktTloc = data4['ktTloc']
-#   k0Tout = data4['k0Tout']
 
 ######################################################
 #                 Formatting                         #

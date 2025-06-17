@@ -4,19 +4,19 @@ Code accompanying manuscript ...
 Mass-weighted coordinates \sqrt{m}x, momenta p/\sqrt{m} and forces F/\sqrt{m} are used in the code
 
 a) The code 'main2.py' with 
-      1) flagp = 0 generates pulsed laser results
-              i) with flagw0 = 0 for w0 = 200 cm^-1 in PulseLow.txt and PulseLowT.txt
-              ii) with flagw0 = 1 for w0 = 1700 cm^-1 in PulseHigh.txt and PulseHighT.txt
+      1) flagp = 0, flagVC = 0 generates pulsed laser results
+              i) with flagw0 = 0 for w0 = 200 cm^-1 and tVC = 1.7 ps in PulseLow.txt and PulseLowT.txt
+              ii) with flagw0 = 1 for w0 = 1700 cm^-1 and tVC = 1.7 ps in PulseHigh.txt and PulseHighT.txt
 
-      2) flagp = 1 generates continuous-wave laser results
-              i) with flagw0 = 0 for w0 = 200 cm^-1 in CWLow.txt and CWLowT.txt
-              ii) with flagw0 = 1 for w0 = 1700 cm^-1 in CWHigh.txt and CWHighT.txt
+      2) flagp = 1, flagVC = 0 generates continuous-wave laser results
+              i) with flagw0 = 0 for w0 = 200 cm^-1 and tVC = 1.7 ps in CWLow.txt and CWLowT.txt
+              ii) with flagw0 = 1 for w0 = 1700 cm^-1 and tVC = 1.7 ps in CWHigh.txt and CWHighT.txt
 
 b) The code 'plot.py' with
-      1) flagp = 0
+      1) flagp = 0, flagVC = 0
               i) and flagw0 = 0 generates Fig. 2b-c, 3 and 4 using PulseLow.txt and PulseLowT.txt
               ii) and flagw0 = 1 generates Fig. S1a-b, S2 and S3 using PulseHigh.txt and PulseHighT.txt
 
-      2) flagp = 1
+      2) flagp = 1, flagVC = 0
               i) and flagw0 = 0 generates Fig. 2e-f using CWLow.txt and CWLowT.txt
               ii) and flagw0 = 1 generates Fig. S1c-d using CWHigh.txt and CWHighT.txt

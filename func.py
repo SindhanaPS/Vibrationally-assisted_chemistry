@@ -4,6 +4,7 @@ from scipy.special import erf
 from scipy.constants import c,pi,h,N_A,Boltzmann
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
+import bisect
 
 cminv_to_rads = 2*pi*c*100
 cminv_to_Hz = c*100
@@ -313,13 +314,19 @@ def RateChangeEachEi(Ei,t1part,t2part,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB
    print('kavg2=',kavg2)
    kavg = RateAvg(t, kt)
    print('kavg=',kavg)
-   
+  
+   # Calculate kIVR
+   idx = bisect.bisect_right(t, tIVR)
+   timeIVR = t[:idx]
+   ktIVR = kt[:idx]
+   kIVR = RateAvg(timeIVR,ktIVR)
+ 
    # Mode-selective and Temperature contributions
    ModeSe,TempInd,Deltak_k = Perc(kavg, k0TlocAvg, k0ToutAvg)
 
    print('ModeSe=',ModeSe,'TempInd=',TempInd,'Deltakk=',Deltak_k)
       
-   return (ModeSe,TempInd,Deltak_k,kavg,kavg1)
+   return (ModeSe,TempInd,Deltak_k,kavg,kIVR)
 
 
 def RateChangeEachEiCW(Ei,t,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,wD,trep):

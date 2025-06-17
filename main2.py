@@ -20,6 +20,12 @@ flagp = 0
 ###############################
 flagw0 = 0
 
+###############################
+# flagVC = 0 small tauVC
+# flagVC = 1 large tauVC
+###############################
+flagVC = 0 
+
 ########################################### Parameters #################################################
 
 if flagw0 == 0:
@@ -54,6 +60,15 @@ kcal_to_J = 4184
 cm3_to_m3 = 10**(-6)
 kB = Boltzmann
 
+alpha = kappa/((rho/cm3_to_m3)*Cs)      # Thermal diffusivity (in m^2s^(-1))      
+
+if flagVC == 0:
+   tVC = R0**2/(3*alpha)                   # Vibrational cooling time constant (in s)
+elif flagVC == 1:
+   tVC = 10**(-9)                          # Vibrational cooling time constant (in s)
+
+print('tVC=',tVC)
+
 w0r = w0*cminv_to_rads
 
 Cloc = HeatCapacity(Tout)
@@ -61,10 +76,6 @@ print('Nmol=',Nmol,'Cloc=',Cloc)
 
 if flagp == 1:
    wDr = wD*cminv_to_rads
-
-alpha = kappa/((rho/cm3_to_m3)*Cs)      # Thermal diffusivity (in m^2s^(-1))      
-tVC = R0**2/(3*alpha)                   # Vibrational cooling time constant (in s)
-print('tVC=',tVC)
 
 tw0 = 2*pi/w0r                         # in s
 zeta = 1/(2*tIVR*w0*cminv_to_rads)     # dimensionless
@@ -121,7 +132,10 @@ if flagp == 0:
       N2 = int(t4*1000/t3)
    elif imax ==2:
       tsplit = 10*t3
-      N1 = int(1000*t3*10/t1)
+      if t3 < 10*t2:
+         N1 = int(1000*t3*10/t1)
+      else:
+         N1 = int(10*t3/t1)
       N2 = 1000
 
    print(tsplit,N1,N2)
