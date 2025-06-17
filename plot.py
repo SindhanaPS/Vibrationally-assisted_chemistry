@@ -8,7 +8,7 @@ from matplotlib import rcParams
 from scipy.constants import c,pi,h,N_A,R,Boltzmann
 
 flagp = 0
-flagw0 = 1
+flagw0 = 0
 flagVC = 0
 
 tIVR = 10**(-12)           # in s
@@ -82,8 +82,8 @@ rcParams['text.latex.preamble'] = r'\usepackage{physics} \usepackage{amsmath} \u
 #                 Plotting                           #
 ######################################################
 
-plotdT(fname2, tSol, DTSol, flagp)
-plotModeTemp(fname1, ES, ModeSeS, TempIndS, DkS, hwCO, Ea, trep, A, e_coeff, Ei, flagp, flagw0)
+plotdT(fname1, tSol, DTSol, flagp)
+plotModeTemp(fname2, ES, ModeSeS, TempIndS, DkS, hwCO, Ea, trep, A, e_coeff, Ei, flagp, flagw0)
 if flagp == 0:
    plotkIVR(fname3, ES, kavg, kIVR, Ea, A, e_coeff)
    plotPreact(fname4,ES,kIVR,tIVR,Ea,A,e_coeff)
