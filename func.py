@@ -315,18 +315,19 @@ def RateChangeEachEi(Ei,t1part,t2part,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB
    kavg = RateAvg(t, kt)
    print('kavg=',kavg)
   
-   # Calculate kIVR
+   # Calculate kIVR and Tmax
    idx = bisect.bisect_right(t, tIVR)
    timeIVR = t[:idx]
    ktIVR = kt[:idx]
    kIVR = RateAvg(timeIVR,ktIVR)
- 
+   Tmax = np.max(Tt) 
+
    # Mode-selective and Temperature contributions
    ModeSe,TempInd,Deltak_k = Perc(kavg, k0TlocAvg, k0ToutAvg)
 
-   print('ModeSe=',ModeSe,'TempInd=',TempInd,'Deltakk=',Deltak_k)
+   print('ModeSe=',ModeSe,'TempInd=',TempInd,'Deltakk=',Deltak_k, 'Tmax=',Tmax)
       
-   return (ModeSe,TempInd,Deltak_k,kavg,kIVR)
+   return (ModeSe,TempInd,Deltak_k,kavg,kIVR,Tmax)
 
 
 def RateChangeEachEiCW(Ei,t,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,wD,trep):
@@ -365,9 +366,11 @@ def RateChangeEachEiCW(Ei,t,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,wD,trep):
    print('k0ToutAvg=',k0ToutAvg)
    print('k0TlocAvg=',k0TlocAvg)
 
+   Tmax = np.max(Tt.y[0])
+
    # Mode-selective and Temperature contributions
    ModeSe,TempInd,Deltak_k = Perc(kavg, k0TlocAvg, k0ToutAvg)
 
-   print('ModeSe=',ModeSe,'TempInd=',TempInd,'Deltakk=',Deltak_k)
+   print('ModeSe=',ModeSe,'TempInd=',TempInd,'Deltakk=',Deltak_k, 'Tmax=',Tmax)
 
-   return (ModeSe,TempInd,Deltak_k,Tt.y[0])
+   return (ModeSe,TempInd,Deltak_k,Tt.y[0],Tmax)

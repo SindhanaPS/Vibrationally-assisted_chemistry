@@ -13,6 +13,7 @@ kcal_to_J = 4184
 J_to_muJ = 10**(6)
 J_to_mJ = 10**(3)
 Lcmm1_tom2 = 10**(-3)/10**(-1)
+kB = Boltzmann
 
 def plotdT(fname2,tsol,DeltaTsol,flagp):
 
@@ -139,6 +140,47 @@ def plotModeTemp(fname, Ekcal, ModeSe, TempInd, Deltak_k, hwCO, Ea, trep, A, e_c
     plt.tight_layout()
     plt.savefig(fname,bbox_inches='tight',dpi=100)
 
+def plotModeTempEa(fname, Ea, ModeSe, TempInd, Deltak_k, Tout):
+
+    fig = plt.figure()
+    plt.rcParams.update({
+    'font.size': 20,
+    })
+
+    ax1 = plt.gca()
+
+    # Make the border of the plot bold
+    for spine in ax1.spines.values():
+       spine.set_linewidth(2)  # Adjust the border (spine) linewidth
+
+    ax1.tick_params(axis='both', which='major', labelsize=22, width=3, direction='in', length=7)
+
+    formatter = ScalarFormatter(useMathText=True)
+    formatter.set_powerlimits((-2, 2))  # Apply 10^x for numbers < 1e-2 or > 1e2
+    ax1.xaxis.set_major_formatter(formatter)
+
+    plt.plot(Ea, Deltak_k, linewidth=3.5, color='#000000', label='Total')  # Black
+    plt.plot(Ea, ModeSe, linewidth=2.5, linestyle='--', color='#FDB515', label='Vibrationally-assisted')
+    plt.plot(Ea, TempInd, linewidth=2.5, linestyle='--', color='#56B4E9', label='Temperature-induced')
+
+    ax1.set_xlabel(r'$V_{B}$ ($\text{kcal mol}^{-1}$)')
+
+    scale = kcal_to_J/(N_A*kB*Tout)                   # conversion from Ea to Ea/kBT
+    secax = ax1.secondary_xaxis('top',
+            functions=(lambda x: scale * x, lambda x: x / scale))
+    secax.set_xlabel(r'$V_{B}/k_BT_{\text{out}}$',labelpad=10)
+
+    plt.yscale('log')
+    ax1.legend(frameon=False, fontsize=15)
+    plt.xlim(left=0)
+    ax1.set_ylabel('$\Delta k/k$')
+
+    secax.xaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+    secax.tick_params(axis='x', which='both', direction='in', length=7, width=3, labelsize=22)
+
+    plt.tight_layout()
+    plt.savefig(fname,bbox_inches='tight',dpi=100)
+
 def plotkt(fname, Ekcal, t, kt, dTti, ktTloc, k0Tout):
     
     fig = plt.figure()
@@ -219,7 +261,7 @@ def plotPreact(fname,E,kIVR,tIVR,Ea,A,e_coeff):
     Pr = np.zeros_like(E)
 
     for i in range(len(Pr)):
-       if np.exp(-tIVR*kIVR[i]) != 1: 
+       if np.exp(-tIVR*kIVR[i]) < 1-10**(-3): 
           Pr[i] = 1 - np.exp(-tIVR*kIVR[i])
        else:
           Pr[i] = tIVR*kIVR[i]

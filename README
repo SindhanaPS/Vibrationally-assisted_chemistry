@@ -12,7 +12,10 @@ a) The code 'main2.py' with
               i) with flagw0 = 0 for w0 = 200 cm^-1 and tVC = 1.7 ps in CWLow.txt and CWLowT.txt
               ii) with flagw0 = 1 for w0 = 1700 cm^-1 and tVC = 1.7 ps in CWHigh.txt and CWHighT.txt
 
-b) The code 'plot.py' with
+b) The code 'mainFig5.py' with flagp =0, flagw0 = 0, and flagVC = 1 generates pulsed laser results for
+   w0 = 200 cm^-1 and tVC = 1 ns and Epulse = 100 \muJ in EaPulseLow.txt 
+
+c) The code 'plot.py' with
       1) flagp = 0, flagVC = 0
               i) and flagw0 = 0 generates Fig. 2b-c, 3 and 4 using PulseLow.txt and PulseLowT.txt
               ii) and flagw0 = 1 generates Fig. S1a-b, S2 and S3 using PulseHigh.txt and PulseHighT.txt
@@ -20,3 +23,6 @@ b) The code 'plot.py' with
       2) flagp = 1, flagVC = 0
               i) and flagw0 = 0 generates Fig. 2e-f using CWLow.txt and CWLowT.txt
               ii) and flagw0 = 1 generates Fig. S1c-d using CWHigh.txt and CWHighT.txt
+
+d) The code 'plotFig5.py' with flagp = 0, flagw0 = 0 and flagVC = 1 generates Fig. 5 using EaPulseLow.txt
+

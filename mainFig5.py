@@ -7,7 +7,6 @@ from matplotlib import rc,cm
 from matplotlib import rcParams
 from scipy.constants import c,pi,h,N_A,R,Boltzmann
 
-
 ###############################
 # flagp = 0 pulsed laser
 # flagp = 1 cw laser
@@ -18,13 +17,13 @@ flagp = 0
 # flagw0 = 0 low frequency mode
 # flagw0 = 1 high frequency mode
 ###############################
-flagw0 = 1
+flagw0 = 0
 
 ###############################
 # flagVC = 0 small tauVC
 # flagVC = 1 large tauVC
 ###############################
-flagVC = 0 
+flagVC = 1
 
 ########################################### Parameters #################################################
 
@@ -34,13 +33,16 @@ elif flagw0 == 1:
    w0 = 1700
 
 if flagp == 1:
-   wD = w0 
+   wD = w0
 
 wCO = 1700                 # in cm^-1
 Tout = 295.0                 # in K 
-Ea = 14                    # in kcal mol^-1
 kbare = 4*10**(-7)         # in s^-1
 
+Epulse = 100 * 10**(-6)    # Energy per pulse in J 
+r = 100*10**(-6)           # laser spot radius
+A = pi*r**2                # laser spot area
+e_coeff = 200              # in L mol^(-1) cm^(-1)
 tIVR = 10**(-12)           # in s
 trep = 10**(-3)            # in s
 
@@ -58,21 +60,23 @@ cminv_to_rads = 2*pi*c*100
 cminv_to_Hz = c*100
 kcal_to_J = 4184
 cm3_to_m3 = 10**(-6)
+Lcmm1_tom2 = 10**(-3)/10**(-1)
 kB = Boltzmann
 
-alpha = kappa/((rho/cm3_to_m3)*Cs)      # Thermal diffusivity (in m^2s^(-1))      
+E = Epulse*(e_coeff*Lcmm1_tom2*m.log(10))/(A*N_A)   # Energy absorbed per molecule in J
+alpha = kappa/((rho/cm3_to_m3)*Cs)                  # Thermal diffusivity (in m^2s^(-1))      
 
 if flagVC == 0:
    tVC = R0**2/(3*alpha)                   # Vibrational cooling time constant (in s)
 elif flagVC == 1:
    tVC = 10**(-9)                          # Vibrational cooling time constant (in s)
 
-print('tVC=',tVC)
+print('Epulse=',Epulse,'Eabs=',E,'tVC=',tVC)
 
 w0r = w0*cminv_to_rads
 
 Cloc = HeatCapacity(Tout)
-print('Nmol=',Nmol,'Cloc=',Cloc) 
+print('Nmol=',Nmol,'Cloc=',Cloc)
 
 if flagp == 1:
    wDr = wD*cminv_to_rads
@@ -83,28 +87,18 @@ zeta = 1/(2*tIVR*w0*cminv_to_rads)     # dimensionless
 hw0 = h*w0*cminv_to_Hz
 EhwkT = hw0/(2*np.tanh(np.divide(hw0,2*kB*Tout)))
 
-A0 = kbare*(2*pi/w0r)*np.exp(Ea*kcal_to_J/(N_A*EhwkT))
-xB = np.sqrt(2*Ea*kcal_to_J/(N_A*w0r**2))
-VB = 0.5*w0r**2*xB**2
-k0 = A0*(w0r/(2*pi))*np.exp(-VB/(EhwkT))
-
-print(alpha,tVC)
-print(zeta)
-print('A0=',A0,'xB=',xB,'kbare=',kbare,'k0=',k0,'VB=',VB,'maxk=',A0*(w0r/(2*pi)))
-
 #############################################################
+
 
 if flagp == 0:
    if flagw0 == 0:
-      fname = 'PulseLow.txt'
-      fnameT = 'PulseLowT.txt'
+      fname = 'EaPulseLow.txt'
    elif flagw0 == 1:
-      fname = 'PulseHigh.txt'
-      fnameT = 'PulseHighT.txt'
-   
+      fname = 'EaPulseHigh.txt'
+
    ######################### Splitting the total time into two parts
    ######################### t1part and t2part
- 
+
    tmax = trep                        # in s
    nt = [tw0, tIVR, tVC, trep]
 
@@ -142,62 +136,35 @@ if flagp == 0:
    t1part = np.linspace(0,tsplit,N1)
    t2part = np.linspace(tsplit,tmax,N2)
 
-   ########################## Average rate constant for different initial energy values in array E
+   ########################## Average rate constant for different barrier heights in Eaarray
 
-   E = np.linspace(0,4*h*wCO*cminv_to_Hz,50)
+   Eaarray = np.linspace(1,14,50)           # in kcal mol^-1
 
-   ModeSe = np.zeros_like(E)          # Mode selective contribution
-   TempInd = np.zeros_like(E)         # Temperature induced contribution
-   Deltak_k = np.zeros_like(E)        # Relative change in rate constant
-   kavg = np.zeros_like(E)            # Rate constant
-   kIVR = np.zeros_like(E)            # Rate constant within tIVR
-   Pr = np.zeros_like(E)              # Probability of reacting 
-   Tmax = np.zeros_like(E)            # maximum temperature
+   ModeSe = np.zeros_like(Eaarray)          # Mode selective contribution
+   TempInd = np.zeros_like(Eaarray)         # Temperature induced contribution
+   Deltak_k = np.zeros_like(Eaarray)        # Relative change in rate constant
+   kavg = np.zeros_like(Eaarray)            # Rate constant
+   kIVR = np.zeros_like(Eaarray)            # Rate constant within tIVR
+   Tmax = np.zeros_like(Eaarray)            # Maximum temperature
 
-   for i in range(np.size(E)):
-      ModeSe[i],TempInd[i],Deltak_k[i],kavg[i],kIVR[i],Tmax[i] = RateChangeEachEi(E[i],t1part,t2part,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,tsplit)
+   for i in range(np.size(Eaarray)):
+      Ea = Eaarray[i]
+      A0 = kbare*(2*pi/w0r)*np.exp(Ea*kcal_to_J/(N_A*EhwkT))
+      xB = np.sqrt(2*Ea*kcal_to_J/(N_A*w0r**2))
+      VB = 0.5*w0r**2*xB**2
+      k0 = A0*(w0r/(2*pi))*np.exp(-VB/(EhwkT))
+      print('A0=',A0,'xB=',xB,'kbare=',kbare,'k0=',k0,'VB=',VB,'maxk=',A0*(w0r/(2*pi)))
 
-      if np.exp(-tIVR*kIVR[i]) < 1-10**(-3): 
-         Pr[i] = 1 - np.exp(-tIVR*kIVR[i])
-      else:
-         Pr[i] = tIVR*kIVR[i]
-
-   Ekcal = E*N_A/kcal_to_J
-   # Save output to a file
-   np.savetxt(fname,np.transpose([Ekcal,ModeSe,TempInd,Deltak_k,Pr,kavg,kIVR,Tmax]))
-
-   ################## Temperature plots ###########################
-   Ei = 3*h*wCO*cminv_to_Hz                       # in J
-
-   t = np.concatenate((t1part, t2part[1:]))
-   w0r = w0*cminv_to_rads
-
-   # Mean position and momentum
-   Xt1,Pt1 = PulseXP(t1part, zeta, w0, Ei)
-   Xt2,Pt2 = PulseXP(t2part, zeta, w0, Ei)      
-
-   Xt = np.concatenate((Xt1, Xt2[1:]))
-   Pt = np.concatenate((Pt1, Pt2[1:]))
-
-   print('Xt0=',Xt[0])
-   # Temperature calculation
-   Tt1 = Tloc(t1part, fmol, Nmol, Cloc, tIVR, tVC, Tout, Tout, zeta, w0, Ei, 0, 0, 0)
-   Tt2 = Tloc(t2part, fmol, Nmol, Cloc, tIVR, tVC, Tout, Tt1.y[0][-1], zeta, w0, Ei, 0, 0, 0)
-   Tt = np.concatenate((Tt1.y[0], Tt2.y[0][1:]))
+      ModeSe[i],TempInd[i],Deltak_k[i],kavg[i],kIVR[i],Tmax[i] = RateChangeEachEi(E,t1part,t2part,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,tsplit)
 
    # Save output to a file
-   np.savetxt(fnameT,np.transpose([t,Tt-Tout]))
-   np.savetxt("constants.txt", [h*wCO*cminv_to_Hz*N_A/kcal_to_J,Ea,Ei])
-
-   ###################################################################
+   np.savetxt(fname,np.transpose([Eaarray,ModeSe,TempInd,Deltak_k,kavg,kIVR,Tmax]))
 
 elif flagp == 1:
    if flagw0 == 0:
-      fname = 'CWLow.txt'
-      fnameT = 'CWLowT.txt'
+      fname = 'EaCWLow.txt'
    elif flagw0 == 1:
-      fname = 'CWHigh.txt'
-      fnameT = 'CWHighT.txt'
+      fname = 'EaCWHigh.txt'
 
    ####################### Time ########################
    tD = 2*pi/wDr                     # in s
@@ -210,20 +177,21 @@ elif flagp == 1:
 
    ########################## Average rate constant for different initial energy values in array E
 
-   E = np.linspace(0,4*h*wCO*cminv_to_Hz,50)
+   Eaarray = np.linspace(1,20,5)           # in kcal mol^-1
 
-   ModeSe = np.zeros_like(E)          # Mode selective contribution
-   TempInd = np.zeros_like(E)         # Temperature induced contribution
-   Deltak_k = np.zeros_like(E)        # Relative change in rate constant
-   Tmax = np.zeros_like(E)            # maximum temperature
+   ModeSe = np.zeros_like(Eaarray)          # Mode selective contribution
+   TempInd = np.zeros_like(Eaarray)         # Temperature induced contribution
+   Deltak_k = np.zeros_like(Eaarray)        # Relative change in rate constant
 
-   for i in range(np.size(E)):
-      ModeSe[i],TempInd[i],Deltak_k[i],Tt,Tmax[i] = RateChangeEachEiCW(E[i],t,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,wD,trep)
-      if E[i] >= 3*h*wCO*cminv_to_Hz and E[i-1] < 3*h*wCO*cminv_to_Hz:
-         Ttsave = Tt
+   for i in range(np.size(Eaarray)):
+      Ea = Eaarray[i]
+      A0 = kbare*(2*pi/w0r)*np.exp(Ea*kcal_to_J/(N_A*EhwkT))
+      xB = np.sqrt(2*Ea*kcal_to_J/(N_A*w0r**2))
+      VB = 0.5*w0r**2*xB**2
+      k0 = A0*(w0r/(2*pi))*np.exp(-VB/(EhwkT))
+      print('A0=',A0,'xB=',xB,'kbare=',kbare,'k0=',k0,'VB=',VB,'maxk=',A0*(w0r/(2*pi)))
 
-   Ekcal = E*N_A/kcal_to_J
+      ModeSe[i],TempInd[i],Deltak_k[i],Tt,Tmax[i] = RateChangeEachEiCW(E,t,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,wD,trep)
+
    # Save output to a file
-   np.savetxt(fnameT,np.transpose([t,Ttsave-Tout]))
-   np.savetxt(fname,np.transpose([Ekcal,ModeSe,TempInd,Deltak_k,Tmax]))
-
+   np.savetxt(fname,np.transpose([Eaarray,ModeSe,TempInd,Deltak_k,Tmax]))
