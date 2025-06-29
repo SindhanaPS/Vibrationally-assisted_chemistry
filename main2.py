@@ -51,6 +51,7 @@ rho = 0.87              # density of toluene (in g.cm^-3)
 Cs = 1.7                # specific heat of toluene (in J.g^(-1).K^(-1))
 Nmol = 1
 
+twindow = tIVR*4             # in s 
 #########################################################################################################
 
 #################### Derived parameters #####################
@@ -155,7 +156,7 @@ if flagp == 0:
    Tmax = np.zeros_like(E)            # maximum temperature
 
    for i in range(np.size(E)):
-      ModeSe[i],TempInd[i],Deltak_k[i],kavg[i],kIVR[i],Tmax[i] = RateChangeEachEi(E[i],t1part,t2part,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,tsplit)
+      ModeSe[i],TempInd[i],Deltak_k[i],kavg[i],kIVR[i],Tmax[i] = RateChangeEachEi(E[i],t1part,t2part,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,tsplit,twindow)
 
       if np.exp(-tIVR*kIVR[i]) < 1-10**(-3): 
          Pr[i] = 1 - np.exp(-tIVR*kIVR[i])
@@ -185,8 +186,11 @@ if flagp == 0:
    Tt2 = Tloc(t2part, fmol, Nmol, Cloc, tIVR, tVC, Tout, Tt1.y[0][-1], zeta, w0, Ei, 0, 0, 0)
    Tt = np.concatenate((Tt1.y[0], Tt2.y[0][1:]))
 
+   n1 = len(Tt1.y[0])        # includes the first point
+   Ttavg = RunningAverageT(Tt, t, Tout, twindow)
+
    # Save output to a file
-   np.savetxt(fnameT,np.transpose([t,Tt-Tout]))
+   np.savetxt(fnameT,np.transpose([t,Ttavg-Tout]))
    np.savetxt("constants.txt", [h*wCO*cminv_to_Hz*N_A/kcal_to_J,Ea,Ei])
 
    ###################################################################
@@ -218,7 +222,7 @@ elif flagp == 1:
    Tmax = np.zeros_like(E)            # maximum temperature
 
    for i in range(np.size(E)):
-      ModeSe[i],TempInd[i],Deltak_k[i],Tt,Tmax[i] = RateChangeEachEiCW(E[i],t,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,wD,trep)
+      ModeSe[i],TempInd[i],Deltak_k[i],Tt,Tmax[i] = RateChangeEachEiCW(E[i],t,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,wD,trep,twindow)
       if E[i] >= 3*h*wCO*cminv_to_Hz and E[i-1] < 3*h*wCO*cminv_to_Hz:
          Ttsave = Tt
 

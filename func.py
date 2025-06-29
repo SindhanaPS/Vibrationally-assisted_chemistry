@@ -10,7 +10,7 @@ cminv_to_rads = 2*pi*c*100
 cminv_to_Hz = c*100
 kB = Boltzmann
 #EPS = np.finfo(float).eps
-EPS = 10**(-15)
+EPS = 10**(-13)
 
 def HeatCapacity(Tout):
 
@@ -249,7 +249,79 @@ def Perc(kavg, k0Tloc, k0Tout):
 
 #   return(Pr)
 
-def RateChangeEachEi(Ei,t1part,t2part,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,tsplit):
+def RunningAverageT(T, t, Tout, window):
+    N = len(t)
+    Tavg = np.zeros(N)
+
+    if t[-1]-t[0] < window:
+       Tavg = np.trapz(T, t) / (t[-1] - t[0])*np.ones_like(t)
+
+    else:
+       # Running state
+       j_start = 0
+       j_end = 0
+       running_integral = 0.0
+       running_weight = 0.0
+
+       for i in range(N):
+           t_center = t[i]
+           t_window_start = t_center - window / 2
+           t_window_end = t_center + window / 2
+
+           # Remove old segments from start
+           while j_start < N - 1 and t[j_start + 1] <= t_window_start:
+               seg_start = t[j_start]
+               seg_end = t[j_start + 1]
+               dt = seg_end - seg_start
+               avg_T = 0.5 * (T[j_start] + T[j_start + 1])
+               running_integral -= avg_T * dt
+               running_weight -= dt
+               j_start += 1
+
+           # Add new segments at end
+           while j_end < N - 1 and t[j_end + 1] <= t_window_end:
+               seg_start = t[j_end]
+               seg_end = t[j_end + 1]
+               dt = seg_end - seg_start
+               avg_T = 0.5 * (T[j_end] + T[j_end + 1])
+               running_integral += avg_T * dt
+               running_weight += dt
+               j_end += 1
+
+           # Compute partial overlaps at window edges
+
+           # Left partial (before first segment starts)
+           if t_window_start < t[j_start]:
+               dt_pad = t[j_start] - t_window_start
+               running_integral += Tout * dt_pad
+               running_weight += dt_pad
+               left_pad = True
+           else:
+               left_pad = False
+
+           # Right partial (after last segment ends)
+           if t_window_end > t[j_end]:
+               dt_pad = t_window_end - t[j_end]
+               running_integral += T[-1] * dt_pad
+               running_weight += dt_pad
+               right_pad = True
+           else:
+               right_pad = False
+
+           # Store result
+           Tavg[i] = running_integral / running_weight if running_weight > 0 else Tout
+
+           # Undo the edge padding before next step
+           if left_pad:
+               running_integral -= Tout * (t[j_start] - t_window_start)
+               running_weight -= (t[j_start] - t_window_start)
+           if right_pad:
+               running_integral -= T[-1] * (t_window_end - t[j_end])
+               running_weight -= (t_window_end - t[j_end])
+
+    return Tavg
+
+def RateChangeEachEi(Ei,t1part,t2part,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,tsplit,twindow):
 
    print('Ei=',Ei)
    t = np.concatenate((t1part, t2part[1:]))
@@ -267,26 +339,31 @@ def RateChangeEachEi(Ei,t1part,t2part,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB
    Tt2 = Tloc(t2part, fmol, Nmol, Cloc, tIVR, tVC, Tout, Tt1.y[0][-1], zeta, w0, Ei, 0, 0, 0)
    Tt = np.concatenate((Tt1.y[0], Tt2.y[0][1:]))
 
-   print("Tt1 min:", np.min(Tt1.y[0]), "max:", np.max(Tt1.y[0]), "mean:", np.mean(Tt1.y[0]))
-   print("Tt1 unique values:", np.unique(Tt1.y[0]))
-   print("Tt2 min:", np.min(Tt2.y[0]), "max:", np.max(Tt2.y[0]), "mean:", np.mean(Tt2.y[0]))
-   print("Tt2 unique values:", np.unique(Tt2.y[0]))
+   n1 = len(Tt1.y[0])        # includes the first point
+   Ttavg = RunningAverageT(Tt, t, Tout, twindow)
+   Tt1avg = Ttavg[:n1]
+   Tt2avg = Ttavg[n1:]
+
+   print("Tt1 min:", np.min(Tt1avg), "max:", np.max(Tt1avg), "mean:", np.mean(Tt1avg))
+   print("Tt1 unique values:", np.unique(Tt1avg))
+   print("Tt2 min:", np.min(Tt2avg), "max:", np.max(Tt2avg), "mean:", np.mean(Tt2avg))
+   print("Tt2 unique values:", np.unique(Tt2avg))
 
    # Delta X, P calcuation
-   D2Xt1,D2Pt1= Delta2XP(t1part, Tt1.y[0], w0)
-   D2Xt2,D2Pt2= Delta2XP(t2part, Tt2.y[0], w0)
+   D2Xt1,D2Pt1= Delta2XP(t1part, Tt1avg, w0)
+   D2Xt2,D2Pt2= Delta2XP(t2part[1:], Tt2avg, w0)
 
    print("D2Xt1 min:", np.min(D2Xt1), "max:", np.max(D2Xt1), "mean:", np.mean(D2Xt1))
    print("D2Xt1 unique values:", np.unique(D2Xt1))
    print("D2Xt2 min:", np.min(D2Xt2), "max:", np.max(D2Xt2), "mean:", np.mean(D2Xt2))
    print("D2Xt2 unique values:", np.unique(D2Xt2))
 
-   D2Xt = np.concatenate((D2Xt1, D2Xt2[1:]))
-   D2Pt = np.concatenate((D2Pt1, D2Pt2[1:]))
+   D2Xt = np.concatenate((D2Xt1, D2Xt2))
+   D2Pt = np.concatenate((D2Pt1, D2Pt2))
 
    # Rate constant
    # k0(Tloc)
-   k0Tloc = RateConstant(t, np.zeros_like(Xt), np.zeros_like(Pt), D2Xt, D2Pt, w0, A0, xB, Tout, Tt, zeta)
+   k0Tloc = RateConstant(t, np.zeros_like(Xt), np.zeros_like(Pt), D2Xt, D2Pt, w0, A0, xB, Tout, Ttavg, zeta)
    k0TlocAvg = RateAvg(t, k0Tloc)
 
    # k0(Tout)
@@ -297,44 +374,43 @@ def RateChangeEachEi(Ei,t1part,t2part,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB
    print('k0TlocAvg=',k0TlocAvg)
 
    print("kt1")
-   kt1 = RateConstant(t1part, Xt1, Pt1, D2Xt1, D2Pt1, w0, A0, xB, Tout, Tt1.y[0], zeta)
+   kt1 = RateConstant(t1part, Xt1, Pt1, D2Xt1, D2Pt1, w0, A0, xB, Tout, Tt1avg, zeta)
    print("kt2")
-   kt2 = RateConstantPump(t2part, Xt2, Pt2, D2Xt2, D2Pt2, w0, A0, xB, Tout, Ei, Tt2.y[0], zeta, tsplit)
-   kt = RateConstantPump(t, Xt, Pt, D2Xt, D2Pt, w0, A0, xB, Tout, Ei, Tt, zeta, tsplit)
+   kt2 = RateConstantPump(t2part[1:], Xt2[1:], Pt2[1:], D2Xt2, D2Pt2, w0, A0, xB, Tout, Ei, Tt2avg, zeta, tsplit)
+   kt = RateConstantPump(t, Xt, Pt, D2Xt, D2Pt, w0, A0, xB, Tout, Ei, Ttavg, zeta, tsplit)
 
    print("kt1 min:", np.min(kt1), "max:", np.max(kt1), "mean:", np.mean(kt1))
    print("kt1 unique values:", np.unique(kt1))
-   print("kt2 min:", np.min(kt2[1:]), "max:", np.max(kt2[1:]), "mean:", np.mean(kt2[1:]))
-   print("kt2 unique values:", np.unique(kt2[1:]))
+   print("kt2 min:", np.min(kt2), "max:", np.max(kt2), "mean:", np.mean(kt2))
+   print("kt2 unique values:", np.unique(kt2))
 
    # Average rate
    kavg1 = RateAvg(t1part, kt1)
    print('kavg1=',kavg1)
-   kavg2 = RateAvg(t2part[1:], kt2[1:])
+   kavg2 = RateAvg(t2part[1:], kt2)
    print('kavg2=',kavg2)
    kavg = RateAvg(t, kt)
    print('kavg=',kavg)
-  
+
    # Calculate kIVR and Tmax
    idx = bisect.bisect_right(t, tIVR)
    timeIVR = t[:idx]
    ktIVR = kt[:idx]
    kIVR = RateAvg(timeIVR,ktIVR)
-   Tmax = np.max(Tt) 
+   Tmax = np.max(Tt)
 
    # Mode-selective and Temperature contributions
    ModeSe,TempInd,Deltak_k = Perc(kavg, k0TlocAvg, k0ToutAvg)
 
    print('ModeSe=',ModeSe,'TempInd=',TempInd,'Deltakk=',Deltak_k, 'Tmax=',Tmax)
-      
+
    return (ModeSe,TempInd,Deltak_k,kavg,kIVR,Tmax)
 
-
-def RateChangeEachEiCW(Ei,t,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,wD,trep):
+def RateChangeEachEiCW(Ei,t,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,wD,trep,twindow):
 
    print('Ei=',Ei)
-   w0r = w0*cminv_to_rads   
-   wDr = wD*cminv_to_rads   
+   w0r = w0*cminv_to_rads
+   wDr = wD*cminv_to_rads
 
    #Calculate F0
    F0 = np.sqrt(Ei*((wDr**2-w0r**2)**2+(2*zeta*w0r*wDr)**2)/(trep*zeta*wDr**2*w0r))
@@ -343,20 +419,21 @@ def RateChangeEachEiCW(Ei,t,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,wD,trep):
    Xt,Pt = CWXP(t, zeta, w0, F0, wD)
 
    # Temperature calculation
-   T0 = Tout + tVC*np.mean(np.square(Pt))/(Cloc*tIVR) 
+   T0 = Tout + tVC*np.mean(np.square(Pt))/(Cloc*tIVR)
    Tt = Tloc(t, fmol, Nmol, Cloc, tIVR, tVC, Tout, T0, zeta, w0, Ei, F0, wD, 1)
+   Ttavg = RunningAverageT(Tt.y[0], t, Tout, twindow)
 
    # Delta X, P calcuation
-   D2Xt,D2Pt= Delta2XP(t, Tt.y[0], w0)
+   D2Xt,D2Pt= Delta2XP(t, Ttavg, w0)
 
    # Rate constant
-   kt = RateConstant(t, Xt, Pt, D2Xt, D2Pt, w0, A0, xB, Tout, Tt.y[0], zeta)
+   kt = RateConstant(t, Xt, Pt, D2Xt, D2Pt, w0, A0, xB, Tout, Ttavg, zeta)
 
    kavg = RateAvg(t, kt)
    print('kavg=',kavg)
 
    # k0(Tloc)
-   k0Tloc = RateConstant(t, np.zeros_like(Xt), np.zeros_like(Pt), D2Xt, D2Pt, w0, A0, xB, Tout, Tt.y[0], zeta)
+   k0Tloc = RateConstant(t, np.zeros_like(Xt), np.zeros_like(Pt), D2Xt, D2Pt, w0, A0, xB, Tout, Ttavg, zeta)
    k0TlocAvg = RateAvg(t, k0Tloc)
 
    # k0(Tout)
@@ -366,11 +443,11 @@ def RateChangeEachEiCW(Ei,t,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,wD,trep):
    print('k0ToutAvg=',k0ToutAvg)
    print('k0TlocAvg=',k0TlocAvg)
 
-   Tmax = np.max(Tt.y[0])
+   Tmax = np.max(Ttavg)
 
    # Mode-selective and Temperature contributions
    ModeSe,TempInd,Deltak_k = Perc(kavg, k0TlocAvg, k0ToutAvg)
 
    print('ModeSe=',ModeSe,'TempInd=',TempInd,'Deltakk=',Deltak_k, 'Tmax=',Tmax)
 
-   return (ModeSe,TempInd,Deltak_k,Tt.y[0],Tmax)
+   return (ModeSe,TempInd,Deltak_k,Ttavg,Tmax)

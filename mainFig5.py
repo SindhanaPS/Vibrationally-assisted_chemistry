@@ -53,6 +53,7 @@ rho = 0.87              # density of toluene (in g.cm^-3)
 Cs = 1.7                # specific heat of toluene (in J.g^(-1).K^(-1))
 Nmol = 1
 
+twindow = tIVR*4             # in s
 #########################################################################################################
 
 #################### Derived parameters #####################
@@ -155,7 +156,7 @@ if flagp == 0:
       k0 = A0*(w0r/(2*pi))*np.exp(-VB/(EhwkT))
       print('A0=',A0,'xB=',xB,'kbare=',kbare,'k0=',k0,'VB=',VB,'maxk=',A0*(w0r/(2*pi)))
 
-      ModeSe[i],TempInd[i],Deltak_k[i],kavg[i],kIVR[i],Tmax[i] = RateChangeEachEi(E,t1part,t2part,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,tsplit)
+      ModeSe[i],TempInd[i],Deltak_k[i],kavg[i],kIVR[i],Tmax[i] = RateChangeEachEi(E,t1part,t2part,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,tsplit,twindow)
 
    # Save output to a file
    np.savetxt(fname,np.transpose([Eaarray,ModeSe,TempInd,Deltak_k,kavg,kIVR,Tmax]))
@@ -191,7 +192,7 @@ elif flagp == 1:
       k0 = A0*(w0r/(2*pi))*np.exp(-VB/(EhwkT))
       print('A0=',A0,'xB=',xB,'kbare=',kbare,'k0=',k0,'VB=',VB,'maxk=',A0*(w0r/(2*pi)))
 
-      ModeSe[i],TempInd[i],Deltak_k[i],Tt,Tmax[i] = RateChangeEachEiCW(E,t,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,wD,trep)
+      ModeSe[i],TempInd[i],Deltak_k[i],Tt,Tmax[i] = RateChangeEachEiCW(E,t,zeta,w0,fmol,Nmol,Cloc,tIVR,tVC,Tout,A0,xB,wD,trep,twindow)
 
    # Save output to a file
    np.savetxt(fname,np.transpose([Eaarray,ModeSe,TempInd,Deltak_k,Tmax]))

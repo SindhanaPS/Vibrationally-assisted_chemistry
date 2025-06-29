@@ -80,6 +80,9 @@ def plotModeTemp(fname, Ekcal, ModeSe, TempInd, Deltak_k, hwCO, Ea, trep, A, e_c
 
     ax1.tick_params(axis='both', which='major', labelsize=22, width=3, direction='in', length=7)
 
+    EJ1 = EJ2 = EJ3 = Ekcal*kcal_to_J/N_A
+    PW1 = PW2 = PW3 = EJ1/trep
+
     if ModeSe[0] == 0:
        ModeSe = ModeSe[1:]
        EJ1 = Ekcal[1:]*kcal_to_J/N_A
@@ -101,9 +104,9 @@ def plotModeTemp(fname, Ekcal, ModeSe, TempInd, Deltak_k, hwCO, Ea, trep, A, e_c
 
     if flagp == 0:
        plt.axvline(x=Ea*kcal_to_J/N_A, linestyle='-', linewidth=2, color='lightgrey') 
-       plt.plot(EJ1, Deltak_k, linewidth=3.5, color='#000000', label='Total')  # Black
-       plt.plot(EJ2, ModeSe, linewidth=2.5, linestyle='--', color='#FDB515', label='Vibrationally-assisted')
-       plt.plot(EJ3, TempInd, linewidth=2.5, linestyle='--', color='#56B4E9', label='Temperature-induced')
+       plt.plot(EJ3, Deltak_k, linewidth=3.5, color='#000000', label='Total')  # Black
+       plt.plot(EJ1, ModeSe, linewidth=2.5, linestyle='--', color='#FDB515', label='Vibrationally-assisted')
+       plt.plot(EJ2, TempInd, linewidth=2.5, linestyle='--', color='#56B4E9', label='Temperature-induced')
 
        Ei_idx = np.argmin(np.abs(EJ1 - Ei))  # find closest x in EJ1 to Ei
        plt.plot(Ei, Deltak_k[Ei_idx], marker='*', color='black', markersize=20, label=None)
@@ -115,9 +118,9 @@ def plotModeTemp(fname, Ekcal, ModeSe, TempInd, Deltak_k, hwCO, Ea, trep, A, e_c
                functions=(lambda x: scale * x, lambda x: x / scale))
        secax.set_xlabel(r'$E_{\text{pulse}}$ ($\mu\text{J}$)',labelpad=10)
     elif flagp == 1:
-       plt.plot(PW1, Deltak_k, linewidth=3.5, color='#000000', label='Total')  # Black
-       plt.plot(PW2, ModeSe, linewidth=2.5, linestyle='--', color='#FDB515', label='Vibrationally-assisted')
-       plt.plot(PW3, TempInd, linewidth=2.5, linestyle='--', color='#56B4E9', label='Temperature-induced')
+       plt.plot(PW3, Deltak_k, linewidth=3.5, color='#000000', label='Total')  # Black
+       plt.plot(PW1, ModeSe, linewidth=2.5, linestyle='--', color='#FDB515', label='Vibrationally-assisted')
+       plt.plot(PW2, TempInd, linewidth=2.5, linestyle='--', color='#56B4E9', label='Temperature-induced')
 
        Ei_idx = np.argmin(np.abs(EJ1 - Ei))  # find closest x in EJ1 to Ei
        plt.plot(Ei/trep, Deltak_k[Ei_idx], marker='*', color='black', markersize=20, label=None)
