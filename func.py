@@ -265,8 +265,8 @@ def RunningAverageT(T, t, Tout, window):
 
        for i in range(N):
            t_center = t[i]
-           t_window_start = t_center - window / 2
-           t_window_end = t_center + window / 2
+           t_window_start = t_center - window
+           t_window_end = t_center
 
            # Remove old segments from start
            while j_start < N - 1 and t[j_start + 1] <= t_window_start:

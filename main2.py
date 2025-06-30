@@ -51,7 +51,7 @@ rho = 0.87              # density of toluene (in g.cm^-3)
 Cs = 1.7                # specific heat of toluene (in J.g^(-1).K^(-1))
 Nmol = 1
 
-twindow = tIVR*4             # in s 
+twindow = 2*tIVR             # in s 
 #########################################################################################################
 
 #################### Derived parameters #####################

@@ -7,8 +7,8 @@ from matplotlib import rc,cm
 from matplotlib import rcParams
 from scipy.constants import c,pi,h,N_A,R,Boltzmann
 
-flagp = 0
-flagw0 = 1
+flagp = 1
+flagw0 = 0
 flagVC = 0
 
 tIVR = 10**(-12)           # in s
